@@ -59,11 +59,39 @@ services:
       - warehouse:/opt/hive/data/warehouse
     networks:
       - hive
+  superset:
+    image: apache/superset
+    container_name: superset
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    environment:
+      SUPERSET_SECRET_KEY: 'thisISaSECRET_key'
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin
+      ADMIN_FIRST_NAME: Admin
+      ADMIN_LAST_NAME: User
+      ADMIN_EMAIL: admin@example.com
+    volumes:
+      - superset_home:/app/superset_home
+    depends_on:
+      - hiveserver2
+    command: >
+      /bin/sh -c "
+        superset db upgrade &&
+        superset fab create-admin --username admin --firstname Admin --lastname User --email admin@example.com --password admin &&
+        superset init &&
+        superset run -h 0.0.0.0 -p 8088
+      "
+    networks:
+      - hive
 
 volumes:
   hive-db:
   warehouse:
+  superset_home:
 
 networks:
   hive:
     name: hive
+ 
